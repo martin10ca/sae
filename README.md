@@ -2,10 +2,66 @@
 Sistema de amortiguación electromagnético (SAE)
 
 ## important commands
+### ros2 environment
+- init environment (everytime you first connected to your rasp after turning it on):
+
+source /opt/ros/jazzy/setup.bash
+cd ~/sae_wsv2
+source install/setup.bash
+echo "source /opt/ros/jazzy/setup.bash" >> ~/.bashrc
+echo "source ~/sae_wsv2/install/setup.bash" >> ~/.bashrc
+source ~/.bashrc
+
+- list avalaible nodes in each package:
+
+ros2 pkg executables main_package
+ros2 pkg executables service_package
+
+- run a node:
+
+ros2 run main_package mpu6050_node
+
+- launch a launch file:
+
+ros2 launch main_package sae.launch.py
+
+- compile workspace:
+
+cd ~/sae_wsv2
+colcon build --symlink-install
+source install/setup.bash
+
+- see active nodes:
+
+ros2 node list
+
+- see node conections:
+
+ros2 node info <node_name>
+
+- see topics:
+
+ros2 topic list
+
+- see graph nodes (UBUNTU server required on computer, install UBUNTU on WSL to do so):
+
+1) install ro2jazzy on your computer
+2) connect to the same wifi
+3) config ROS_DOMAIN_ID and ROS discovery
+4) execute "ros2 run rqt_graph rqt_graph"
+
+
 ### GIT
+
 - see what files have changed: 
 
 git status
+
+- pull changes (important to do so before push)
+
+cd ~/sae_wsv2
+git pull
+
 - add changes (inside ros2 project) + commit + push:
 
 git add .
