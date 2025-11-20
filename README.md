@@ -1,8 +1,8 @@
-## sae
+# SAE
 Sistema de amortiguación electromagnético (SAE)
 
 ## important commands
-# GIT COMMANDS
+### GIT
 - see what files have changed: 
 
 git status
