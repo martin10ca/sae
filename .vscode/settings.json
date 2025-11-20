@@ -1,0 +1,7 @@
+{
+    "python.analysis.extraPaths": [
+        "/opt/ros/jazzy/lib/python3.12/site-packages"
+    ],
+    "python.defaultInterpreterPath": "/usr/bin/python3",
+    "cmake.sourceDirectory": "/home/taller/sae_wsv2/src/service_package"
+}
