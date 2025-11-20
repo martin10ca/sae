@@ -1,0 +1,4 @@
+float32 pct_speed     # velocidad absoluta deseada en porcentaje (0 a 100)
+---
+bool success       # true si la operación fue exitosa
+string message     # mensaje de estado opcional
