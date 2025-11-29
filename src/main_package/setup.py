@@ -12,7 +12,9 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name, 'templates'), 
-            glob.glob('main_package/templates/*.html')),  # Add this line
+            glob.glob('main_package/templates/*.html')),
+        (os.path.join('share', package_name, 'launch'),
+            glob.glob('launch/*.py')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -31,12 +33,14 @@ setup(
 
             # Sensores
             'mpu6050_node = main_package.sensores.mpu6050_node:main',
+            'tcrt5000_node = main_package.sensores.tcrt5000_node:main',
+            'distanceSensor_node = main_package.sensores.distanceSensor_node:main',
 
             # Servicios
             'server = main_package.servicios.server:main',
             'client = main_package.servicios.client:main',
             'gui_client = main_package.servicios.gui_client:main',
-            'web_gui = main_package.servicios.web_gui_client:main',  # Add this
+            'web_gui = main_package.servicios.web_gui_client:main',
 
         ],
     },

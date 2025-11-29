@@ -86,7 +86,7 @@ class m1_actuator(Node):
     def on_cmd(self, msg: Float32):
         cmd = max(-1.0, min(1.0, msg.data))
         self._apply_raw(cmd)
-        self.get_logger().debug(f"New command received: {target_speed:.2f}")
+        self.get_logger().debug(f"New command received: {cmd:.2f}")
 
     def destroy_node(self):
         try:
