@@ -2,325 +2,284 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SAE Speed Control</title>
+
+    <!-- Chart.js para la gráfica del MPU -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
-        * {
+        body {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            font-family: Arial;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
         }
-        
-        .container {
+
+        .card {
             background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            max-width: 500px;
+            padding: 35px;
+            width: 420px;
+            border-radius: 18px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+        }
+
+        h2, h3 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #4a4a4a;
+        }
+
+        .slider {
             width: 100%;
         }
-        
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 30px;
-            font-size: 28px;
-        }
-        
-        .speed-display {
-            text-align: center;
-            font-size: 48px;
-            font-weight: bold;
-            color: #667eea;
-            margin: 20px 0;
-        }
-        
-        .slider-container {
-            margin: 30px 0;
-        }
-        
-        input[type="range"] {
-            width: 100%;
-            height: 8px;
-            border-radius: 5px;
-            background: #ddd;
-            outline: none;
-            -webkit-appearance: none;
-        }
-        
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 25px;
-            height: 25px;
-            border-radius: 50%;
-            background: #667eea;
+
+        .quick-btns button {
+            padding: 8px 15px;
+            border: 1px solid #bbb;
+            margin: 4px;
+            background: #fafafa;
+            border-radius: 6px;
             cursor: pointer;
         }
-        
-        input[type="range"]::-moz-range-thumb {
-            width: 25px;
-            height: 25px;
-            border-radius: 50%;
-            background: #667eea;
-            cursor: pointer;
-            border: none;
-        }
-        
-        .input-group {
-            display: flex;
-            gap: 10px;
-            margin: 20px 0;
-        }
-        
-        input[type="number"] {
-            flex: 1;
-            padding: 15px;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            font-size: 18px;
-            text-align: center;
-        }
-        
-        .btn {
-            padding: 15px 30px;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-transform: uppercase;
-        }
-        
-        .btn-primary {
-            background: #667eea;
-            color: white;
-            flex: 1;
-        }
-        
-        .btn-primary:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-        
-        .btn-danger {
-            background: #e74c3c;
-            color: white;
-            width: 100%;
-            margin-top: 10px;
-        }
-        
-        .btn-danger:hover {
-            background: #c0392b;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
-        }
-        
-        .status-box {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 30px;
-            border-left: 4px solid #667eea;
-        }
-        
-        .status-label {
-            font-size: 12px;
-            color: #666;
-            text-transform: uppercase;
-            margin-bottom: 5px;
-        }
-        
-        .status-text {
-            font-size: 16px;
-            color: #333;
-            font-weight: 500;
-        }
-        
-        .alert {
-            padding: 15px;
-            border-radius: 10px;
-            margin: 15px 0;
-            display: none;
-        }
-        
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .preset-buttons {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin: 20px 0;
-        }
-        
-        .btn-preset {
+
+        .speed-box {
+            width: 80px;
             padding: 10px;
-            background: #f8f9fa;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
+            text-align: center;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
         }
-        
-        .btn-preset:hover {
-            background: #667eea;
+
+        .set-btn {
+            padding: 10px 20px;
+            background: #6a8dff;
             color: white;
-            border-color: #667eea;
+            border-radius: 6px;
+            border: 1px solid black;
+            cursor: pointer;
+        }
+
+        .stop-btn {
+            width: 100%;
+            padding: 10px;
+            background: #e65151;
+            color: white;
+            font-weight: bold;
+            border-radius: 6px;
+            margin-top: 15px;
+            cursor: pointer;
+        }
+
+        .status-box {
+            background: #f4f6fa;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 12px;
+            border-left: 4px solid #6a5acd;
+        }
+
+        .sensor-panel {
+            margin-top: 25px;
+            padding: 15px;
+            background: #f7f9fc;
+            border-radius: 10px;
+            border-left: 4px solid #6a5acd;
+        }
+
+        .sensor-item {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        /* ----------- TCRT BLOCK ----------- */
+        .tcrt-block {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+            padding-left: 4px;
+        }
+
+        .tcrt-cell {
+            width: 22px;
+            height: 22px;
+            border: 1px solid black;
+            border-radius: 4px;
+            background: white;
         }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>🚗 SAE Speed Control</h1>
-        
-        <div class="speed-display">
-            <span id="speedValue">0</span>%
+<div class="card">
+
+    <h2>🚗 SAE Speed Control</h2>
+    <h3 id="speed_display">0%</h3>
+
+    <input type="range" id="speed_slider" class="slider" min="0" max="100" value="0">
+
+    <div class="quick-btns">
+        <button onclick="setQuick(0)">0%</button>
+        <button onclick="setQuick(25)">25%</button>
+        <button onclick="setQuick(50)">50%</button>
+        <button onclick="setQuick(75)">75%</button>
+    </div>
+
+    <div style="display:flex; margin-top:10px;">
+        <input type="number" id="speed_input" class="speed-box" value="0">
+        <button class="set-btn" onclick="sendSpeed()">SET SPEED</button>
+    </div>
+
+    <button class="stop-btn" onclick="emergencyStop()">⚠ EMERGENCY STOP</button>
+
+    <!-- STATUS PANEL -->
+    <div class="status-box">
+        <h4>CURRENT STATUS</h4>
+        <p id="status_text">---</p>
+    </div>
+
+    <!-- SENSOR PANEL -->
+    <div class="sensor-panel">
+        <h3>Sensor Readings</h3>
+
+        <!-- TCRT BLOCK -->
+        <div class="sensor-item">
+            <strong>TCRT5000 Line Sensors:</strong>
+            <div id="tcrt_block" class="tcrt-block">
+                <div class="tcrt-cell"></div>
+                <div class="tcrt-cell"></div>
+                <div class="tcrt-cell"></div>
+                <div class="tcrt-cell"></div>
+                <div class="tcrt-cell"></div>
+            </div>
         </div>
-        
-        <div class="slider-container">
-            <input type="range" id="speedSlider" min="0" max="100" value="0" step="1">
-        </div>
-        
-        <div class="preset-buttons">
-            <button class="btn-preset" onclick="setSpeed(0)">0%</button>
-            <button class="btn-preset" onclick="setSpeed(25)">25%</button>
-            <button class="btn-preset" onclick="setSpeed(50)">50%</button>
-            <button class="btn-preset" onclick="setSpeed(75)">75%</button>
-        </div>
-        
-        <div class="input-group">
-            <input type="number" id="speedInput" min="0" max="100" value="0" placeholder="Speed %">
-            <button class="btn btn-primary" onclick="sendSpeed()">Set Speed</button>
-        </div>
-        
-        <button class="btn btn-danger" onclick="emergencyStop()">⚠️ EMERGENCY STOP</button>
-        
-        <div id="alert" class="alert"></div>
-        
-        <div class="status-box">
-            <div class="status-label">Current Status</div>
-            <div class="status-text" id="statusText">Connecting...</div>
+
+        <div class="sensor-item">
+            <strong>Distance Sensors (ADS1115):</strong>
+            <ul id="distance_list"></ul>
         </div>
     </div>
 
-    <script>
-        const slider = document.getElementById('speedSlider');
-        const speedInput = document.getElementById('speedInput');
-        const speedValue = document.getElementById('speedValue');
-        const statusText = document.getElementById('statusText');
-        const alertBox = document.getElementById('alert');
+    <!-- MPU GRAPH PANEL -->
+    <div class="sensor-panel">
+        <h3>Aceleración Z (MPU6050)</h3>
+        <canvas id="accelChart" width="380" height="200"></canvas>
+    </div>
 
-        // Update display when slider moves
-        slider.addEventListener('input', function() {
-            speedValue.textContent = this.value;
-            speedInput.value = this.value;
+</div>
+
+
+<script>
+    // ---------------- QUICK BUTTONS ----------------
+    function setQuick(val) {
+        document.getElementById("speed_slider").value = val;
+        document.getElementById("speed_input").value = val;
+        document.getElementById("speed_display").innerText = val + "%";
+        sendSpeed();
+    }
+
+    // ---------------- SEND SPEED ----------------
+    function sendSpeed() {
+        let val = document.getElementById("speed_input").value;
+
+        fetch("/set_speed", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({speed: val})
         });
+    }
 
-        // Update slider when input changes
-        speedInput.addEventListener('input', function() {
-            const val = Math.max(0, Math.min(100, this.value));
-            slider.value = val;
-            speedValue.textContent = val;
+    // ---------------- EMERGENCY STOP ----------------
+    function emergencyStop() {
+        fetch("/set_speed", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({speed: 0})
         });
+        document.getElementById("speed_slider").value = 0;
+        document.getElementById("speed_input").value = 0;
+    }
 
-        function setSpeed(speed) {
-            slider.value = speed;
-            speedInput.value = speed;
-            speedValue.textContent = speed;
-        }
+    // ---------------- REAL-TIME CHART ----------------
+    const ctx = document.getElementById("accelChart").getContext("2d");
 
-        function showAlert(message, isError = false) {
-            alertBox.textContent = message;
-            alertBox.className = 'alert ' + (isError ? 'alert-error' : 'alert-success');
-            alertBox.style.display = 'block';
-            
-            setTimeout(() => {
-                alertBox.style.display = 'none';
-            }, 3000);
-        }
+    let accelData = {
+        labels: [],
+        datasets: [{
+            label: "Aceleración Z (m/s²)",
+            data: [],
+            borderColor: "rgb(75, 192, 192)",
+            tension: 0.2
+        }]
+    };
 
-        async function sendSpeed() {
-            const speed = parseFloat(speedInput.value);
-            
-            if (isNaN(speed) || speed < 0 || speed > 100) {
-                showAlert('Please enter a valid speed between 0 and 100', true);
-                return;
+    let accelChart = new Chart(ctx, {
+        type: "line",
+        data: accelData,
+        options: {
+            animation: false,
+            responsive: true,
+            scales: {
+                x: { title: { text: "Tiempo (s)", display: true } },
+                y: { title: { text: "Aceleración Z", display: true } }
             }
+        }
+    });
 
-            try {
-                const response = await fetch('/set_speed', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ speed: speed })
-                });
+    let timeCounter = 0;
 
-                const data = await response.json();
-                
-                if (data.success) {
-                    showAlert(`✓ ${data.message}`);
-                    updateStatus();
-                } else {
-                    showAlert(`✗ ${data.message}`, true);
+    function updateChart(z_value) {
+        accelData.labels.push((timeCounter++ * 0.5).toFixed(1));
+        accelData.datasets[0].data.push(z_value);
+
+        if (accelData.labels.length > 100) {
+            accelData.labels.shift();
+            accelData.datasets[0].data.shift();
+        }
+
+        accelChart.update();
+    }
+
+    // ---------------- LIVE STATUS ----------------
+    function updateStatus() {
+        fetch("/status")
+            .then(r => r.json())
+            .then(data => {
+
+                document.getElementById("speed_display").innerText = data.speed + "%";
+                document.getElementById("status_text").innerText = data.status;
+
+                // TCRT BLOCK UPDATE
+                const cells = document.querySelectorAll("#tcrt_block .tcrt-cell");
+                for (let i = 0; i < 5; i++) {
+                    if (data.tcrt[i] === 0) {
+                        cells[i].style.background = "black";
+                    } else {
+                        cells[i].style.background = "white";
+                    }
                 }
-            } catch (error) {
-                showAlert('Error connecting to server', true);
-            }
-        }
 
-        function emergencyStop() {
-            setSpeed(0);
-            sendSpeed();
-        }
+                // Distance sensors
+                let list = document.getElementById("distance_list");
+                list.innerHTML = "";
+                for (const [topic, value] of Object.entries(data.dist_sensors)) {
+                    let li = document.createElement("li");
+                    li.textContent = `${topic}: ${value.toFixed(3)} cm`;
+                    list.appendChild(li);
+                }
 
-        async function updateStatus() {
-            try {
-                const response = await fetch('/status');
-                const data = await response.json();
-                
-                speedValue.textContent = data.speed.toFixed(1);
-                statusText.textContent = data.status;
-            } catch (error) {
-                console.error('Error fetching status:', error);
-            }
-        }
+                // Graph
+                updateChart(data.mpu_accel_z);
+            });
+    }
 
-        // Update status every second
-        setInterval(updateStatus, 1000);
-        
-        // Initial status update
-        updateStatus();
+    setInterval(updateStatus, 500); // 2 Hz
 
-        // Allow Enter key to send speed
-        speedInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendSpeed();
-            }
-        });
-    </script>
+</script>
+
 </body>
 </html>

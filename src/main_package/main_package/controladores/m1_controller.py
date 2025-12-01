@@ -8,69 +8,99 @@ class m1_controller(Node):
     def __init__(self):
         super().__init__('m1_controller_node')
 
-        # declare param
-        self.frequency_hz = 20.0 
-        self.ramp_step = 5      
+        # controller parameters
+        self.frequency_hz = 20.0
+        self.ramp_step = 5
         self.pwm_max = 255
 
-        # aditional config
-        self.max_pct = 0.0           # % de velocidad deseado [-100, 100]
-        self.current_pwm = 0            # Valor actual de PWM [0–255]
-        self.max_pwm = 0             # Valor objetivo de PWM [0–255]
-        self.direction = 1              # 1 = adelante, -1 = reversa
-        
-        # Create publisher
-        self.pub_motor_cmd = self.create_publisher(Float32, 'motor_cmd', 10)
-        # Create subscriptions  
-        self.sub = self.create_subscription(Float32,'max_speed_pct',self.callback_max_speed,10) #pct from server
-        self.sub1 = self.create_subscription(Int8MultiArray, "tcrt5000_topic", self.callback_tcrt5000, 10) # ir sensors
+        # internal state
+        self.max_pct = 0.0
+        self.current_pwm = 0
+        self.max_pwm = 0
+        self.direction = 1
 
-        # Control loop clock
+        # ----------- PUBLISHERS FOR TWO MOTORS -------------
+        self.pub_m1 = self.create_publisher(Float32, '/m1/cmd', 10)
+        self.pub_m2 = self.create_publisher(Float32, '/m2/cmd', 10)
+
+        # ----------- SUBSCRIPTIONS --------------------------
+        self.sub_pct = self.create_subscription(
+            Float32, 'max_speed_pct', self.callback_max_speed, 10
+        )
+
+        self.sub_tcrt = self.create_subscription(
+            Int8MultiArray, "tcrt5000_topic", self.callback_tcrt5000, 10
+        )
+
+        # CONTROL LOOP TIMER
         self.timer = self.create_timer(1.0 / self.frequency_hz, self.control_loop)
 
         self.get_logger().info(
-            f"m1_controller: ready | freq={self.frequency_hz:.1f} Hz | ramp_step={self.ramp_step}."
+            f"m1_controller: ready | freq={self.frequency_hz} Hz | ramp_step={self.ramp_step}"
         )
-    ### Methods
-    # CALLBACKS
-    def callback_max_speed(self, msg: Float32):
+
+    # ------------------------------------------------------
+    def callback_max_speed(self, msg):
         self.max_pct = max(-100.0, min(msg.data, 100.0))
-        self.direction = 1 if self.target_pct >= 0 else -1
-        self.max_pwm = round((abs(self.target_pct) / 100.0) * self.pwm_max)
-        self.get_logger().info(f"m1_controller: Max_speed received: {self.target_pct:.1f}%")
-    
-    def callback_tcrt5000(self, msg: Int8MultiArray):
+
+        self.direction = 1 if self.max_pct >= 0 else -1
+        self.max_pwm = round((abs(self.max_pct) / 100.0) * self.pwm_max)
+
+        self.get_logger().info(f"New max speed: {self.max_pct:.1f}%")
+
+    def callback_tcrt5000(self, msg):
         self.sensor_values = msg.data
-        self.get_logger().debug(f"m1_controller: TCRT5000 readings: {self.sensor_values}")
+        self.get_logger().debug(f"TCRT5000 readings: {self.sensor_values}")
 
+    # ------------------------------------------------------
     def control_loop(self):
-        # TODO define control loop
-        if self.current_pwm < self.target_pwm:
-            self.current_pwm = min(self.current_pwm + self.ramp_step, self.target_pwm)
-        elif self.current_pwm > self.target_pwm:
-            self.current_pwm = max(self.current_pwm - self.ramp_step, self.target_pwm)
 
-        
-        # Normalización del comando [-1.0, 1.0]
-        normalized = (self.current_pwm / self.pwm_max) * self.direction
-        # Publicar comando al actuador
+        # Ramp-up logic
+        if self.current_pwm < self.max_pwm:
+            self.current_pwm = min(self.current_pwm + self.ramp_step, self.max_pwm)
+        elif self.current_pwm > self.max_pwm:
+            self.current_pwm = max(self.current_pwm - self.ramp_step, self.max_pwm)
+
+        normalized_cmd = (self.current_pwm / self.pwm_max) * self.direction
+
         msg = Float32()
-        msg.data = normalized
-        self.pub_motor_cmd.publish(msg)
+        msg.data = normalized_cmd
+
+        # -------- PUBLISH TO BOTH MOTORS SAFELY --------
+        # ROS2 does NOT crash if no subscriber exists.
+        try:
+            self.pub_m1.publish(msg)
+        except Exception as e:
+            self.get_logger().warn(f"m1_controller: M1 publish failed → {e}")
+
+        try:
+            self.pub_m2.publish(msg)
+        except Exception as e:
+            self.get_logger().warn(f"m1_controller: M2 publish failed → {e}")
+
         self.get_logger().debug(
-            f"PWM={self.current_pwm:3d}/{self.pwm_max} Dir={self.direction:+d} Cmd={normalized:+.2f}"
+            f"PWM={self.current_pwm}/{self.pwm_max} dir={self.direction:+d} cmd={normalized_cmd:+.2f}"
         )
 
+    # ------------------------------------------------------
     def destroy_node(self):
+        stop_msg = Float32()
+        stop_msg.data = 0.0
+
+        # Attempt to stop motors, ignoring missing actuators
         try:
-            # Publica 0 al detenerse
-            msg = Float32()
-            msg.data = 0.0
-            self.pub_motor_cmd.publish(msg)
-            self.get_logger().info("Motor stopped (cmd=0.0).")
-        finally:
-            self.get_logger().info("m1_controller: shutdown.")
-            super().destroy_node()
+            self.pub_m1.publish(stop_msg)
+        except:
+            pass
+
+        try:
+            self.pub_m2.publish(stop_msg)
+        except:
+            pass
+
+        self.get_logger().info("m1_controller: shutdown (motors stopped).")
+        super().destroy_node()
+
 
 def main(args=None):
     rclpy.init(args=args)
@@ -78,7 +108,7 @@ def main(args=None):
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
-        node.get_logger().info("m1_controller: keyboard interrupt.")
+        node.get_logger().info("m1_controller: keyboard interrupt")
     finally:
         node.destroy_node()
         rclpy.shutdown()

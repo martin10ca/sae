@@ -26,10 +26,12 @@ setup(
     entry_points={
         'console_scripts': [
             # Controladores
-            'm1_controller = main_package.controladores.M1Controller:main',
+            'm1_controller = main_package.controladores.m1_controller:main',
+            'm2_controller = main_package.controladores.m2_controller:main',
 
             # Actuadores
-            'm1_actuator = main_package.actuadores.M1Actuator:main',
+            'm1_actuator = main_package.actuadores.m1_actuator:main',
+            'm2_actuator = main_package.actuadores.m2_actuator:main',
 
             # Sensores
             'mpu6050_node = main_package.sensores.mpu6050_node:main',

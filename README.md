@@ -24,7 +24,8 @@ ros2 pkg executables service_package
 
 - run a node:
 
-ros2 run main_package mpu6050_node
+ros2 run main_package distanceSensor_node --ros-args -p adc_channel:=2
+
 
 - launch a launch file:
 
@@ -56,7 +57,6 @@ ros2 topic list
 2) connect to the same wifi
 3) config ROS_DOMAIN_ID and ROS discovery
 4) execute "ros2 run rqt_graph rqt_graph"
-
 
 ### GIT
 

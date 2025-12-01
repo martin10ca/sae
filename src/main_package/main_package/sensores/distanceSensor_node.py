@@ -2,12 +2,9 @@
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float32
-import time
-
-# Import ADS1115
 import board
 import busio
-from adafruit_ads1x15.ads1115 import ADS1115, Mode
+import adafruit_ads1x15.ads1115 as ADS
 from adafruit_ads1x15.analog_in import AnalogIn
 
 
@@ -15,53 +12,42 @@ class DistanceSensorNode(Node):
     def __init__(self):
         super().__init__("distance_sensor_node")
 
-        # Declare input channel parameter (0–3)
+        # Declarar parámetro adc_channel (0–3)
         self.declare_parameter("adc_channel", 0)
-        ch = int(self.get_parameter("adc_channel").value)
+        self.adc_channel = int(self.get_parameter("adc_channel").value)
 
-        if ch not in [0, 1, 2, 3]:
-            raise ValueError("adc_channel debe ser 0, 1, 2 o 3.")
+        if self.adc_channel not in [0, 1, 2, 3]:
+            raise ValueError("adc_channel must be 0–3")
 
-        # --- ADS1115 initialization ---
-        i2c = busio.I2C(board.SCL, board.SDA)
-        self.ads = ADS1115(i2c)
-        
-        # HIGH SPEED MODE (860 SPS)
-        self.ads.mode = Mode.CONTINUOUS
-        self.ads.data_rate = 860
+        # Inicializar I2C + ADC
+        self.i2c = busio.I2C(board.SCL, board.SDA)
+        self.ads = ADS.ADS1115(self.i2c, address=0x4A)
+        self.ads.gain = 1  # ±4.096V
 
-        # Select channel
-        self.channel = AnalogIn(self.ads, getattr(ADS1115, f'P{ch}'))
+        # API moderna → canal es entero
+        self.channel = AnalogIn(self.ads, self.adc_channel)
 
         # Publisher
-        self.pub_dist = self.create_publisher(Float32, "distanceSensor_topic", 10)
+        self.pub = self.create_publisher(Float32, "distanceSensor_topic", 10)
 
-        # Timer at 20 Hz
+        # Timer 20Hz
         self.timer = self.create_timer(0.05, self.timer_callback)
 
-        self.get_logger().info(
-            f"ADS1115 DistanceSensor initialized on channel {ch}"
-        )
+        self.get_logger().info(f"✔ ADS1115 iniciado en canal {self.adc_channel}")
+        self.get_logger().info(f"Ready(distanceSensor_node in {self.adc_channel} channel + ADS1115).")
 
     def timer_callback(self):
-        # Voltage returned directly by AnalogIn
-        volts = self.channel.voltage
+        volts = self.channel.voltage  # Voltaje real del canal
 
-        # Clamp to 0–2V max
-        volts = max(0.0, min(2.0, volts))
-
-        # Map to distance (0–2V → 0–2cm)
-        distance_cm = volts * 1.0  # 1 V = 1 cm
+        distance_cm = (volts / 3.3) * 2.0
 
         msg = Float32()
         msg.data = distance_cm
-        self.pub_dist.publish(msg)
+        self.pub.publish(msg)
 
-        self.get_logger().debug(f"ADS1115: {volts:.3f} V → {distance_cm:.3f} cm")
-
-    def destroy_node(self):
-        self.get_logger().info("ADS1115 DistanceSensor shutdown")
-        super().destroy_node()
+        self.get_logger().debug(
+            f"[ADS1115 CH={self.adc_channel}] {volts:.3f} V → {distance_cm:.3f} cm"
+        )
 
 
 def main(args=None):
@@ -70,7 +56,7 @@ def main(args=None):
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
-        node.get_logger().info("ADS1115 node stopped.")
+        pass
     finally:
         node.destroy_node()
         rclpy.shutdown()
