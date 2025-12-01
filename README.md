@@ -72,5 +72,7 @@ git pull
 - add changes (inside ros2 project) + commit + push:
 
 git add .
+
 git commit -m "Description"
+
 git push
