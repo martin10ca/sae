@@ -6,10 +6,15 @@ Sistema de amortiguación electromagnético (SAE)
 - init environment (everytime you first connected to your rasp after turning it on):
 
 source /opt/ros/jazzy/setup.bash
+
 cd ~/sae_wsv2
+
 source install/setup.bash
+
 echo "source /opt/ros/jazzy/setup.bash" >> ~/.bashrc
+
 echo "source ~/sae_wsv2/install/setup.bash" >> ~/.bashrc
+
 source ~/.bashrc
 
 - list avalaible nodes in each package:
