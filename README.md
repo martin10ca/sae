@@ -33,7 +33,9 @@ ros2 launch main_package sae.launch.py
 - compile workspace:
 
 cd ~/sae_wsv2
+
 colcon build --symlink-install
+
 source install/setup.bash
 
 - see active nodes:
