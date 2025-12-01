@@ -11,9 +11,9 @@ cd ~/sae_wsv2
 
 source install/setup.bash
 
-echo "source /opt/ros/jazzy/setup.bash" >> ~/.bashrc
+source /opt/ros/jazzy/setup.bash
 
-echo "source ~/sae_wsv2/install/setup.bash" >> ~/.bashrc
+source ~/sae_wsv2/install/setup.bash
 
 source ~/.bashrc
 
