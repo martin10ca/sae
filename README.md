@@ -78,3 +78,9 @@ git add .
 git commit -m "Description"
 
 git push
+
+## ERRORS
+
+- detect i2c connections
+
+sudo i2cdetect -y 1
