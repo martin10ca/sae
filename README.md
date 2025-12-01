@@ -79,7 +79,10 @@ git commit -m "Description"
 
 git push
 
-## ERRORS
+### DEBUG
+- listen topics
+
+ros2 topic echo <nombre_del_topico>
 
 - detect i2c connections
 
