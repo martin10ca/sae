@@ -14,11 +14,11 @@ def generate_launch_description():
             executable='tcrt5000_node',
             name='tcrt5000_node',
             parameters=[
-                {"pinFarLeft": 11},
-                {"pinLeft": 13},
-                {"pinCenter": 29},
-                {"pinRight": 31},
-                {"pinFarRight": 37},
+                {"pinFarLeft": 31},
+                {"pinLeft": 37},
+                {"pinCenter": 13},
+                {"pinRight": 11},
+                {"pinFarRight": 29},
             ]
         ),
 

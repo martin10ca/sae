@@ -21,7 +21,7 @@ class DistanceSensorNode(Node):
 
         # Inicializar I2C + ADC
         self.i2c = busio.I2C(board.SCL, board.SDA)
-        self.ads = ADS.ADS1115(self.i2c, address=0x4A)
+        self.ads = ADS.ADS1115(self.i2c, address=0x48)
         self.ads.gain = 1  # ±4.096V
 
         # API moderna → canal es entero
@@ -39,7 +39,7 @@ class DistanceSensorNode(Node):
     def timer_callback(self):
         volts = self.channel.voltage  # Voltaje real del canal
 
-        distance_cm = (volts / 3.3) * 2.0
+        distance_cm = (volts / 3.3)  *2.0
 
         msg = Float32()
         msg.data = distance_cm

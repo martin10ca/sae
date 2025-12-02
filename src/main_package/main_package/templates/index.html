@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>SAE Speed Control</title>
 
-    <!-- Chart.js para la gráfica del MPU -->
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
@@ -37,15 +37,6 @@
             width: 100%;
         }
 
-        .quick-btns button {
-            padding: 8px 15px;
-            border: 1px solid #bbb;
-            margin: 4px;
-            background: #fafafa;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
         .speed-box {
             width: 80px;
             padding: 10px;
@@ -60,14 +51,15 @@
             background: #6a8dff;
             color: white;
             border-radius: 6px;
-            border: 1px solid black;
+            border: none;
             cursor: pointer;
         }
 
+        /* STOP SOBRIO */
         .stop-btn {
             width: 100%;
             padding: 10px;
-            background: #e65151;
+            background: #444;
             color: white;
             font-weight: bold;
             border-radius: 6px;
@@ -96,7 +88,7 @@
             font-size: 14px;
         }
 
-        /* ----------- TCRT BLOCK ----------- */
+        /* TCRT */
         .tcrt-block {
             display: flex;
             gap: 6px;
@@ -120,21 +112,16 @@
     <h2>🚗 SAE Speed Control</h2>
     <h3 id="speed_display">0%</h3>
 
-    <input type="range" id="speed_slider" class="slider" min="0" max="100" value="0">
-
-    <div class="quick-btns">
-        <button onclick="setQuick(0)">0%</button>
-        <button onclick="setQuick(25)">25%</button>
-        <button onclick="setQuick(50)">50%</button>
-        <button onclick="setQuick(75)">75%</button>
-    </div>
+    <!-- SOLO SLIDER + INPUT -->
+    <input type="range" id="speed_slider" class="slider" min="0" max="100" value="0"
+           oninput="syncSlider()">
 
     <div style="display:flex; margin-top:10px;">
-        <input type="number" id="speed_input" class="speed-box" value="0">
+        <input type="number" id="speed_input" class="speed-box" value="0" min="0" max="100" oninput="syncInput()">
         <button class="set-btn" onclick="sendSpeed()">SET SPEED</button>
     </div>
 
-    <button class="stop-btn" onclick="emergencyStop()">⚠ EMERGENCY STOP</button>
+    <button class="stop-btn" onclick="emergencyStop()">STOP</button>
 
     <!-- STATUS PANEL -->
     <div class="status-box">
@@ -146,7 +133,7 @@
     <div class="sensor-panel">
         <h3>Sensor Readings</h3>
 
-        <!-- TCRT BLOCK -->
+        <!-- TCRT -->
         <div class="sensor-item">
             <strong>TCRT5000 Line Sensors:</strong>
             <div id="tcrt_block" class="tcrt-block">
@@ -158,13 +145,14 @@
             </div>
         </div>
 
+        <!-- DISTANCES -->
         <div class="sensor-item">
             <strong>Distance Sensors (ADS1115):</strong>
             <ul id="distance_list"></ul>
         </div>
     </div>
 
-    <!-- MPU GRAPH PANEL -->
+    <!-- MPU GRAPH -->
     <div class="sensor-panel">
         <h3>Aceleración Z (MPU6050)</h3>
         <canvas id="accelChart" width="380" height="200"></canvas>
@@ -172,14 +160,20 @@
 
 </div>
 
-
 <script>
-    // ---------------- QUICK BUTTONS ----------------
-    function setQuick(val) {
-        document.getElementById("speed_slider").value = val;
-        document.getElementById("speed_input").value = val;
-        document.getElementById("speed_display").innerText = val + "%";
-        sendSpeed();
+    // ---------------- SLIDER ↔ INPUT SYNC ----------------
+    function syncSlider() {
+        let v = document.getElementById("speed_slider").value;
+        document.getElementById("speed_input").value = v;
+        document.getElementById("speed_display").innerText = v + "%";
+    }
+
+    function syncInput() {
+        let v = document.getElementById("speed_input").value;
+        if (v < 0) v = 0;
+        if (v > 100) v = 100;
+        document.getElementById("speed_slider").value = v;
+        document.getElementById("speed_display").innerText = v + "%";
     }
 
     // ---------------- SEND SPEED ----------------
@@ -193,18 +187,20 @@
         });
     }
 
-    // ---------------- EMERGENCY STOP ----------------
+    // ---------------- STOP BUTTON ----------------
     function emergencyStop() {
         fetch("/set_speed", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({speed: 0})
         });
+
         document.getElementById("speed_slider").value = 0;
         document.getElementById("speed_input").value = 0;
+        document.getElementById("speed_display").innerText = "0%";
     }
 
-    // ---------------- REAL-TIME CHART ----------------
+    // ---------------- MPU GRAPH ----------------
     const ctx = document.getElementById("accelChart").getContext("2d");
 
     let accelData = {
@@ -231,12 +227,11 @@
     });
 
     let timeCounter = 0;
-
     function updateChart(z_value) {
         accelData.labels.push((timeCounter++ * 0.5).toFixed(1));
         accelData.datasets[0].data.push(z_value);
 
-        if (accelData.labels.length > 100) {
+        if (accelData.labels.length > 80) {
             accelData.labels.shift();
             accelData.datasets[0].data.shift();
         }
@@ -253,32 +248,26 @@
                 document.getElementById("speed_display").innerText = data.speed + "%";
                 document.getElementById("status_text").innerText = data.status;
 
-                // TCRT BLOCK UPDATE
+                // TCRT update
                 const cells = document.querySelectorAll("#tcrt_block .tcrt-cell");
                 for (let i = 0; i < 5; i++) {
-                    if (data.tcrt[i] === 0) {
-                        cells[i].style.background = "black";
-                    } else {
-                        cells[i].style.background = "white";
-                    }
+                    cells[i].style.background = (data.tcrt[i] === 0 ? "black" : "white");
                 }
 
-                // Distance sensors
+                // Distance with ONE DECIMAL
                 let list = document.getElementById("distance_list");
                 list.innerHTML = "";
                 for (const [topic, value] of Object.entries(data.dist_sensors)) {
                     let li = document.createElement("li");
-                    li.textContent = `${topic}: ${value.toFixed(3)} cm`;
+                    li.textContent = `${topic}: ${parseFloat(value).toFixed(1)} cm`;
                     list.appendChild(li);
                 }
 
-                // Graph
                 updateChart(data.mpu_accel_z);
             });
     }
 
-    setInterval(updateStatus, 500); // 2 Hz
-
+    setInterval(updateStatus, 500);
 </script>
 
 </body>

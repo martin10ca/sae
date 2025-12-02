@@ -20,6 +20,7 @@ source ~/.bashrc
 - list avalaible nodes in each package:
 
 ros2 pkg executables main_package
+
 ros2 pkg executables service_package
 
 - run a node:
@@ -29,7 +30,7 @@ ros2 run main_package distanceSensor_node --ros-args -p adc_channel:=2
 
 - launch a launch file:
 
-ros2 launch main_package sae.launch.py
+ros2 launch main_package sensors.launch.py
 
 - compile workspace:
 
